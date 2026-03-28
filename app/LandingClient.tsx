@@ -66,6 +66,18 @@ export default function LandingClient() {
   return (
     <div style={{ fontFamily: "'DM Sans', sans-serif" }}>
       <style suppressHydrationWarning>{`
+        @media (max-width: 1024px) {
+          .grid-about { grid-template-columns: 1fr !important; gap: 3rem !important; }
+          .grid-domains, .grid-team, .grid-resources { grid-template-columns: repeat(2, 1fr) !important; }
+          .hero-stats { position: relative !important; right: auto !important; bottom: auto !important; flex-direction: row !important; margin-top: 3rem; flex-wrap: wrap; justify-content: flex-start; }
+          .hero-stats > div { text-align: left !important; }
+        }
+        @media (max-width: 768px) {
+          section { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
+          .hero-section { padding-top: 6rem !important; padding-bottom: 3rem !important; }
+          .grid-features, .grid-domains, .grid-team, .grid-resources { grid-template-columns: 1fr !important; }
+          .footer-content { flex-direction: column !important; align-items: flex-start !important; gap: 1rem !important; }
+        }
         .fade-up { opacity: 0; transform: translateY(28px); transition: opacity 0.7s ease, transform 0.7s ease; }
         .fade-up.visible { opacity: 1; transform: translateY(0); }
         .timeline-item { opacity: 0; transform: translateX(-20px); transition: opacity 0.5s ease, transform 0.5s ease; }
@@ -78,7 +90,7 @@ export default function LandingClient() {
       `}</style>
 
       {/* ── HERO ── */}
-      <section style={{
+       <section className="hero-section" style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center',
         padding: '8rem 4rem 4rem', position: 'relative', overflow: 'hidden',
       }}>
@@ -128,7 +140,7 @@ export default function LandingClient() {
         </div>
 
         {/* Stats */}
-        <div style={{ position: 'absolute', right: '4rem', bottom: '4rem', display: 'flex', flexDirection: 'column', gap: '1rem', zIndex: 2 }}>
+        <div className="hero-stats" style={{ position: 'absolute', right: '4rem', bottom: '4rem', display: 'flex', flexDirection: 'column', gap: '1rem', zIndex: 2 }}>
           {[
             { num: '119+', label: 'Verified Members' },
             { num: '14', label: 'Active Domains' },
@@ -148,7 +160,7 @@ export default function LandingClient() {
 
       {/* ── ABOUT ── */}
       <section id="about" style={{ background: '#112240', borderTop: '1px solid rgba(201,168,76,0.15)', borderBottom: '1px solid rgba(201,168,76,0.15)', padding: '6rem 4rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5rem', alignItems: 'center', maxWidth: 1200, margin: '0 auto' }}>
+        <div className="grid-about" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5rem', alignItems: 'center', maxWidth: 1200, margin: '0 auto' }}>
           <div className="fade-up">
             <div style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.72rem', color: '#c9a84c', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '0.75rem' }}>// About CDSC</div>
             <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', fontWeight: 700, lineHeight: 1.2, marginBottom: '1rem' }}>
@@ -163,7 +175,7 @@ export default function LandingClient() {
               <p key={i} style={{ color: '#8a9bb5', lineHeight: 1.9, fontSize: '1rem', fontWeight: 300, marginBottom: '1.2rem' }} dangerouslySetInnerHTML={{ __html: p.replace(/<strong>/g, '<strong style="color:#f8f6f0;font-weight:500">') }} />
             ))}
           </div>
-          <div className="fade-up" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="fade-up grid-features" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             {[
               { icon: '🧠', title: 'Peer Learning', desc: '1:1 doubt sessions, daily DSA challenges, and domain-specific mentorship.' },
               { icon: '🤝', title: 'Collaboration', desc: 'Cross-year, cross-domain projects and team-building opportunities.' },
@@ -198,7 +210,7 @@ export default function LandingClient() {
               Each domain is student-led with a dedicated team, resources, and regular sessions.
             </p>
           </div>
-          <div className="fade-up" style={{
+          <div className="fade-up grid-domains" style={{
             display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
             gap: '1px', background: 'rgba(201,168,76,0.12)',
             border: '1px solid rgba(201,168,76,0.12)', borderRadius: 8, overflow: 'hidden',
@@ -225,7 +237,7 @@ export default function LandingClient() {
             <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', fontWeight: 700 }}>Core Founding Team</h2>
             <div style={{ width: 50, height: 2, background: '#c9a84c', margin: '1rem auto 0' }} />
           </div>
-          <div className="fade-up" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem' }}>
+          <div className="fade-up grid-team" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem' }}>
             {FOUNDERS.map(f => (
               <div key={f.name} style={{
                 background: '#0a1628',
@@ -294,7 +306,7 @@ export default function LandingClient() {
             <div style={{ width: 50, height: 2, background: '#c9a84c', margin: '1rem 0' }} />
             <p style={{ color: '#8a9bb5', fontSize: '0.9rem' }}>Verified content created and curated by community members. Full access for verified members.</p>
           </div>
-          <div className="fade-up" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+          <div className="fade-up grid-resources" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
             {RESOURCES.map((r, i) => (
               <div key={i} style={{
                 background: '#0a1628', border: '1px solid rgba(201,168,76,0.15)',
@@ -341,7 +353,7 @@ export default function LandingClient() {
 
       {/* ── FOOTER ── */}
       <footer style={{ background: '#060e1a', borderTop: '1px solid rgba(201,168,76,0.15)', padding: '3rem 4rem' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+        <div className="footer-content" style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
           <div>
             <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.1rem', fontWeight: 700, color: '#c9a84c', marginBottom: '0.4rem' }}>CDSC@SCOE</div>
             <p style={{ fontSize: '0.78rem', color: '#8a9bb5' }}>Computer Department Student Community<br />Siddhant College of Engineering, Pune</p>

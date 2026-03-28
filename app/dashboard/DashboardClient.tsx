@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import ProfileEditor from '@/components/ui/ProfileEditor'
@@ -36,17 +35,27 @@ export default function DashboardClient({ user }: { user: User }) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [resources, setResources] = useState<Resource[]>([])
   const [loadingData, setLoadingData] = useState(true)
-  const router = useRouter()
+  const [currentUser, setCurrentUser] = useState<User | null>(user)
   const supabase = createClient()
 
+  // FIX 5: Use useEffect with no redirect logic - just fetch data
   useEffect(() => {
     const load = async () => {
       try {
-        console.log('📊 Dashboard loading for user:', user.id)
+        // Verify user is still authenticated
+        const { data: { user: authUser } } = await supabase.auth.getUser()
+        if (!authUser) {
+          // User logged out, but let middleware handle redirect
+          setCurrentUser(null)
+          return
+        }
+        setCurrentUser(authUser)
+
+        console.log('📊 Dashboard loading for user:', authUser.id)
         const { data: prof, error } = await supabase
           .from('profiles')
           .select('full_name, year, roll_no, bio, linkedin_url, github_url, domains, is_admin')
-          .eq('id', user.id)
+          .eq('id', authUser.id)
           .single()
 
         console.log('👤 Profile fetch result:', { data: prof, error: error?.message })
@@ -66,9 +75,9 @@ export default function DashboardClient({ user }: { user: User }) {
         } else {
           // Profile doesn't exist yet, create one from user metadata
           console.log('⚠️ Profile not found, creating new one')
-          const meta = user.user_metadata
+          const meta = authUser.user_metadata
           const newProfile = {
-            full_name: meta?.full_name || user.email?.split('@')[0] || '',
+            full_name: meta?.full_name || authUser.email?.split('@')[0] || '',
             year: meta?.year || '',
             roll_no: meta?.roll_no || '',
             bio: '',
@@ -80,7 +89,7 @@ export default function DashboardClient({ user }: { user: User }) {
           
           // Try to create the profile
           const createRes = await supabase.from('profiles').insert({
-            id: user.id,
+            id: authUser.id,
             full_name: newProfile.full_name,
             year: newProfile.year,
             roll_no: newProfile.roll_no,
@@ -103,12 +112,12 @@ export default function DashboardClient({ user }: { user: User }) {
       setLoadingData(false)
     }
     load()
-  }, [user.id])
+  }, [])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
-    router.push('/')
-    router.refresh()
+    // FIX 4: Use hard navigation for sign out too
+    window.location.href = '/'
   }
 
   const name = profile?.full_name || user.email?.split('@')[0] || 'Member'
@@ -125,9 +134,19 @@ export default function DashboardClient({ user }: { user: User }) {
   ]
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a1628', display: 'flex' }}>
+    <div className="dashboard-container" style={{ minHeight: '100vh', background: '#0a1628', display: 'flex' }}>
+<style>{`
+@media (max-width: 768px) {
+  .dashboard-container { flex-direction: column !important; }
+  .dashboard-sidebar { position: relative !important; width: 100% !important; min-height: auto !important; border-right: none !important; border-bottom: 1px solid rgba(201,168,76,0.12) !important; z-index: 10 !important; }
+  .dashboard-nav { display: flex !important; overflow-x: auto !important; white-space: nowrap !important; padding: 0.5rem !important; }
+  .dashboard-nav button { margin-bottom: 0 !important; margin-right: 0.5rem !important; flex: 0 0 auto !important; padding: 0.5rem 0.75rem !important; border-left: none !important; border-bottom: 2px solid transparent !important; }
+  .dashboard-nav button.active { border-bottom: 2px solid #c9a84c !important; }
+  .dashboard-main { margin-left: 0 !important; padding: 1.5rem 1rem !important; }
+}
+`}</style>
       {/* SIDEBAR */}
-      <aside style={{ width: 240, minHeight: '100vh', background: '#080f1e', borderRight: '1px solid rgba(201,168,76,0.12)', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50 }}>
+      <aside className="dashboard-sidebar" style={{ width: 240, minHeight: '100vh', background: '#080f1e', borderRight: '1px solid rgba(201,168,76,0.12)', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50 }}>
         <div style={{ padding: '1.5rem 1.5rem 1rem', borderBottom: '1px solid rgba(201,168,76,0.1)' }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', textDecoration: 'none' }}>
             <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg, #c9a84c, #e8c97a)', borderRadius: 6, display: 'grid', placeItems: 'center', fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: '0.85rem', color: '#0a1628' }}>C</div>
@@ -135,9 +154,9 @@ export default function DashboardClient({ user }: { user: User }) {
           </Link>
         </div>
 
-        <nav style={{ padding: '1rem 0.75rem', flex: 1 }}>
+        <nav className="dashboard-nav" style={{ padding: '1rem 0.75rem', flex: 1 }}>
           {navItems.map(item => (
-            <button key={item.id} onClick={() => setTab(item.id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 0.85rem', borderRadius: 6, border: 'none', cursor: 'pointer', marginBottom: '0.25rem', textAlign: 'left', fontSize: '0.85rem', fontWeight: 500, background: tab === item.id ? 'rgba(201,168,76,0.1)' : 'transparent', color: tab === item.id ? '#c9a84c' : '#8a9bb5', borderLeft: tab === item.id ? '2px solid #c9a84c' : '2px solid transparent', transition: 'all 0.15s' }}>
+            <button key={item.id} className={tab === item.id ? 'active' : ''} onClick={() => setTab(item.id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 0.85rem', borderRadius: 6, border: 'none', cursor: 'pointer', marginBottom: '0.25rem', textAlign: 'left', fontSize: '0.85rem', fontWeight: 500, background: tab === item.id ? 'rgba(201,168,76,0.1)' : 'transparent', color: tab === item.id ? '#c9a84c' : '#8a9bb5', borderLeft: tab === item.id ? '2px solid #c9a84c' : '2px solid transparent', transition: 'all 0.15s' }}>
               <span>{item.icon}</span>
               {item.label}
               {item.adminOnly && <span style={{ marginLeft: 'auto', fontSize: '0.58rem', padding: '0.1rem 0.35rem', border: '1px solid rgba(201,168,76,0.4)', borderRadius: 2, color: '#c9a84c' }}>ADMIN</span>}
@@ -169,7 +188,7 @@ export default function DashboardClient({ user }: { user: User }) {
       </aside>
 
       {/* MAIN */}
-      <main style={{ marginLeft: 240, flex: 1, padding: '2.5rem 3rem', minHeight: '100vh' }}>
+      <main className="dashboard-main" style={{ marginLeft: 240, flex: 1, padding: '2.5rem 3rem', minHeight: '100vh', width: '100%', maxWidth: '100vw', overflowX: 'hidden' }}>
 
         {/* HOME */}
         {tab === 'home' && (

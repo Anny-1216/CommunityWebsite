@@ -57,25 +57,42 @@ export default function SignupPage() {
     setLoading(true)
     setError('')
 
-    const { data, error: signupError } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-      options: {
-        data: {
-          full_name: formData.fullName,
-          year: formData.year,
-          roll_no: formData.rollNo,
-          domains: formData.selectedDomains,
+    try {
+      console.log('📡 Calling Supabase auth.signUp directly...')
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.fullName,
+            year: formData.year,
+            roll_no: formData.rollNo,
+            domains: formData.selectedDomains,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
+      })
 
-    if (signupError) {
-      setError(signupError.message)
-      setLoading(false)
-    } else {
+      if (signUpError) {
+        setError(signUpError.message)
+        setLoading(false)
+        return
+      }
+
       setSuccess(true)
+      
+      // If user session is returned, they are logged in automatically
+      if (data.session) {
+        setTimeout(() => {
+          router.push('/dashboard')
+          router.refresh()
+        }, 1000)
+      } else {
+        setLoading(false)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Signup failed')
+      setLoading(false)
     }
   }
 

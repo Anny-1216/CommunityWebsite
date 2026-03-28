@@ -12,13 +12,19 @@ export function createClient() {
         getAll() {
           return cookieStore.getAll()
         },
-        setAll(cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>) {
+        setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {
-            // Called from Server Component — can be ignored
+            cookiesToSet.forEach(({ name, value, options }) => {
+              console.log(`[SERVER CLIENT] Setting cookie ${name}`)
+              cookieStore.set(name, value, {
+                ...options,
+                path: '/',
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+              })
+            })
+          } catch (error) {
+            console.error('[SERVER CLIENT] Error setting cookie:', error)
           }
         },
       },

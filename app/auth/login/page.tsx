@@ -16,23 +16,43 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('🔐 FORM SUBMITTED - handleLogin called!')
     setLoading(true)
     setError('')
 
     console.log('🔐 Attempting login with:', { email, password: '***' })
     
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-
-    console.log('✅ Supabase response:', { data, error: error?.message })
-
-    if (error) {
-      console.error('❌ Login error:', error)
-      setError(error.message)
+    if (!email || !password) {
+      console.error('❌ Email or password empty!', { email, password })
+      setError('Please enter email and password')
       setLoading(false)
-    } else {
-      console.log('✅ Login successful! Redirecting to dashboard...')
-      router.push('/dashboard')
-      router.refresh()
+      return
+    }
+    
+    try {
+      console.log('📡 Calling Supabase client directly...')
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      
+      if (signInError) {
+        console.error('❌ Login error:', signInError.message)
+        setError(signInError.message)
+        setLoading(false)
+        return
+      }
+
+      console.log('✅ Login successful', data.user?.id)
+      
+      // Wait a moment for cookies to physically settle
+      setTimeout(() => {
+        window.location.href = '/dashboard'
+      }, 500)
+    } catch (err) {
+      console.error('❌ Login error caught:', err)
+      setError(err instanceof Error ? err.message : 'Login failed')
+      setLoading(false)
     }
   }
 
